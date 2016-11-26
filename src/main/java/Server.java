@@ -151,7 +151,7 @@ class ClientThread extends Thread {
                         String [] afterSendArray = afterSend.split("to"); // contains "foobar" in [0] and "2" in [1]
                         msg = afterSendArray[0].trim(); // contains the message to be sent, "foobar" in this case
 
-                        ArrayList<Integer> clientList = new ArrayList<>();
+                        ArrayList<Integer> clientList = new ArrayList<Integer>();
                         /* if sending to multiple clients */
                         if(afterSendArray[1].contains("and")){
                             String[] sendersArrays = afterSendArray[1].split("and");
