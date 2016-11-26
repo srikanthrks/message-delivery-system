@@ -7,6 +7,8 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.regex.Pattern;
 
 public class Server {
 
@@ -140,13 +142,56 @@ class ClientThread extends Thread {
                         threads[threadNum].outputStream.println(stringBuffer.toString());
                     }
 
-                    else if(line.startsWith("Send ")) {
-                        String[] split = line.split("\\s");
+                    /* Send foobar to 2 matching the regex // "[Ss]end\s+.+to\s*\d"
+                    /* Send foobar to 2 and 3 matching the regex // "[Ss]end\s+.+to\s*\d" */
+
+                    else if(Pattern.compile("[Ss]end\\s+.+to\\s*\\d").matcher(line).find()) {
                         String msg;
-                        if(split.length > 0){
-                            msg = split[1];
+                        String afterSend = line.substring(4);//everything after "Send", "foobar to 2" in this case
+                        String [] afterSendArray = afterSend.split("to"); // contains "foobar" in [0] and "2" in [1]
+                        msg = afterSendArray[0].trim(); // contains the message to be sent, "foobar" in this case
+
+                        ArrayList<Integer> clientList = new ArrayList<>();
+                        /* if sending to multiple clients */
+                        if(afterSendArray[1].contains("and")){
+                            String[] sendersArrays = afterSendArray[1].split("and");
+                            for(String str: sendersArrays){
+                                try {
+                                    clientList.add(Integer.parseInt(str.trim()));
+                                } catch (NumberFormatException e) {
+                                    System.out.println(" Not a valid client number : " + e);
+                                }
+                            }
                         }
-                        //Pattern.matches("\\\\to\d+", split);
+                        /*  if sending to only one client */
+                        else{
+                            try {
+                                clientList.add(Integer.parseInt(afterSendArray[1].trim()));
+                            } catch (NumberFormatException e) {
+                                System.out.println(" Not a valid client number : " + e);
+                            }
+                        }
+
+                        for(int client : clientList){
+                            if(threads[client] != null){
+                                threads[client].outputStream.println(msg);
+                            }
+                        }
+
+                    }
+
+                    else if(Pattern.compile("[Ss]end\\s+.+to\\s*\\d+\\s*and\\s*\\d+").matcher(line).find()) {
+                        String msg;
+                        String afterSend = line.substring(4);//everything after "Send", "foobar to 2" in this case
+                        String [] afterSendArray = afterSend.split("to"); // contains "foobar" in [0] and "2 and 3" in [1]
+                        msg = afterSendArray[0].trim(); // contains the message to be sent, "foobar" in this case
+                        String[] senders = afterSendArray[1].trim().split("and");// afterSendArray[1] contains "2 and 3"
+                        for (int i = 0, j=0; i < maxClientsCount && j< senders.length; i++) {
+                            if (threads[i] != null && i == Integer.parseInt(senders[j].trim())) {
+                                threads[i].outputStream.println(msg);
+                            }
+                        }
+
                     }
                     /* If the client sends Bye, send Bye */
                     else if("Bye".equalsIgnoreCase(line)) {
@@ -157,37 +202,13 @@ class ClientThread extends Thread {
                             }
                         }
                     }
+                    else{
+                        threads[threadNum].outputStream.println("Valid messages are:\n " +
+                                "Who am i ?\n Who is here ?\n Send message to 2 \n Send message to 1 and 3");
+                    }
                 }
 
             }//while
-
-            /**String name = bufferRead.readLine().trim();
-             outputStream.println("Hello " + name  + ". Welcome to our chat room.\nTo leave enter quit in a new line");
-
-             for (int i = 0; i < maxClientsCount; i++) {
-             if (threads[i] != null && threads[i] != this) {
-             threads[i].outputStream.println("=== A new user " + name + " entered the chat room !!! ===");
-             }
-             }
-             while (true) {
-             String line = bufferRead.readLine();
-             if (line !=null  && line.startsWith("quit")) {
-             break;
-             }
-             for (int i = 0; i < maxClientsCount; i++) {
-             if (threads[i] != null) {
-             threads[i].outputStream.println("From <" + clientNum + ">: " + line);
-             }
-             }
-             }
-
-             for (int i = 0; i < maxClientsCount; i++) {
-             if (threads[i] != null && threads[i] != this) {
-             threads[i].outputStream.println("=== The user " + clientNum + " is leaving the chat room !!! ===");
-             }
-             }
-             outputStream.println("=== Bye " + clientNum + " ===");
-             **/
 
       /*
        * Clean up. Set the current thread variable to null so that a new client
