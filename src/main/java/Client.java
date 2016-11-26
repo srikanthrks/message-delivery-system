@@ -43,6 +43,7 @@ public class Client implements Runnable {
      */
         try {
             clientSocket = new Socket(host, portNumber);
+            System.out.println("Connected to " +  host + " on port# " + portNumber);
             consoleInputBuffer = new BufferedReader(new InputStreamReader(System.in));
             outputStream = new PrintStream(clientSocket.getOutputStream());
             inputStream = new InputStreamReader(clientSocket.getInputStream());

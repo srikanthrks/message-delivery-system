@@ -34,7 +34,7 @@ public class Server {
                             + "Now using port number=" + portNumber);
         } else {
             portNumber = Integer.valueOf(args[0]).intValue();
-            System.out.println("Starting Server on port# " + portNumber);
+            System.out.println("Starting Server on port# " + portNumber + "\nPress Ctrl + C to quit");
         }
 
     /*
